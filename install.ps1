@@ -4,7 +4,7 @@
 #
 
 #
-# Install Dot Files
+# Install PowerShell Profile
 #
 $UserProfile = $env:USERPROFILE
 $DocumentsPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::MyDocuments)
@@ -32,9 +32,16 @@ Foreach ($PowerShellProfile in $PowerShellProfiles) {
     }
 }
 
+#
+# Install Git Configuration
+#
 $GitConfigPath       = Join-Path -Path $UserProfile -ChildPath '.gitconfig'
 $GitConfigSourcePath = Join-Path -Path $PSScriptRoot -ChildPath '.gitconfig'
 if (-not (Test-Path -Path $GitConfigPath)) {
     $null = New-Item -Path $GitConfigPath -Value $GitConfigSourcePath -ItemType SymbolicLink
 }
+
+#
+# Install AppData files
+#
 
