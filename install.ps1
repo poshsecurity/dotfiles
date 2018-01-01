@@ -1,47 +1,61 @@
-
 #
 # Global Configuration
 #
+$UserProfile = $env:USERPROFILE
+$DocumentsPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::MyDocuments)
+$AppDataRoaming = $env:APPDATA
 
 #
 # Install PowerShell Profile
 #
-$UserProfile = $env:USERPROFILE
-$DocumentsPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::MyDocuments)
+'--------------------'
+'PowerShell Profile'
+'--------------------'
+$PowerShellProfileSource = Join-Path -Path $PSScriptRoot -ChildPath 'PowerShell\Microsoft.PowerShell_profile.ps1'
 
 $PowerShellProfiles = @(
-    @{
-        ProfileDirectory = Join-Path -Path $DocumentsPath -ChildPath 'WindowsPowerShell'
-        ProfilePath      = Join-Path -Path $DocumentsPath -ChildPath 'WindowsPowerShell\Microsoft.PowerShell_profile.ps1'
-    },
-    @{
-        ProfileDirectory = Join-Path -Path $DocumentsPath -ChildPath 'PowerShell'
-        ProfilePath      = Join-Path -Path $DocumentsPath -ChildPath 'PowerShell\Microsoft.PowerShell_profile.ps1'
-    }
+    (Join-Path -Path $DocumentsPath -ChildPath 'WindowsPowerShell\Microsoft.PowerShell_profile.ps1') # PowerShell 5 and below
+    (Join-Path -Path $DocumentsPath -ChildPath 'PowerShell\Microsoft.PowerShell_profile.ps1') # PowerShell 6
 )
 
-$PowerShellProfileSourcePath = Join-Path -Path $PSScriptRoot -ChildPath 'PowerShell\Microsoft.PowerShell_profile.ps1'
+Foreach ($File in $PowerShellProfiles) {
+    $ProfileDirectory = Split-Path -Path $File -Parent
 
-Foreach ($PowerShellProfile in $PowerShellProfiles) {
-    if (-not (Test-Path -Path $PowerShellProfile.ProfileDirectory)) {
-        $null = New-Item -Path $PowerShellProfile.ProfileDirectory -ItemType Directory
+    # Create the directory
+    If (-not (Test-Path -Path $ProfileDirectory)) {
+        'Creating directory {0}' -f $ProfileDirectory
+        $null = New-Item -Path $ProfileDirectory -ItemType Directory
     }
 
-    if (-not (Test-Path -Path $PowerShellProfile.ProfilePath)) {
-        $null = New-Item -Path $PowerShellProfile.ProfilePath -Value $PowerShellProfileSourcePath -ItemType SymbolicLink
+    # Create the symbolic link
+    If (-not (Test-Path -Path $File)) {
+        'Creating symbolic link of {0} to {1}' -f $File, $PowerShellProfileSource
+        $null = New-Item -Path $File -Value $PowerShellProfileSource -ItemType SymbolicLink
     }
 }
 
 #
-# Install Git Configuration
+# Install Dot Files
 #
-$GitConfigPath       = Join-Path -Path $UserProfile -ChildPath '.gitconfig'
-$GitConfigSourcePath = Join-Path -Path $PSScriptRoot -ChildPath '.gitconfig'
-if (-not (Test-Path -Path $GitConfigPath)) {
-    $null = New-Item -Path $GitConfigPath -Value $GitConfigSourcePath -ItemType SymbolicLink
+'--------------------'
+'Dot Files'
+'--------------------'
+$DotFileSources = Get-ChildItem -Path $PSScriptRoot -Exclude @('README.md', 'install.ps1', 'LICENSE.md', '*PowerShell*') -Recurse | Where-Object {-not $_.PSIsContainer} |Select-Object -ExpandProperty FullName
+Foreach ($DotFileSource in $DotFileSources) {
+    
+    $DestinationFile = $DotFileSource.Replace($PSScriptRoot, $UserProfile)
+    $DestinationDirectory = Split-Path -Path $DestinationFile -Parent
+
+    # Create the directory
+    If (-not (Test-Path -Path $DestinationDirectory)) {
+        'Creating directory {0}' -f $DestinationDirectory
+        $null = New-Item -Path $DestinationDirectory -ItemType Directory
+    }
+
+    # Create the symbolic link
+    If (-not (Test-Path -Path $DestinationFile)) {
+        'Creating symbolic link of {0} to {1}' -f $DestinationFile, $DotFileSource
+        $null = New-Item -Path $DestinationFile -Value $DotFileSource -ItemType SymbolicLink
+    }
+
 }
-
-#
-# Install AppData files
-#
-
