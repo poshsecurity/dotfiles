@@ -103,6 +103,17 @@ Function Set-GitIdentity {
     git config user.email $Email
 }
 
+Function Set-GitSigning {
+    Param (
+        # Your Name
+        [Parameter(mandatory=$true)]
+        [String]
+        $KeyID
+    )
+    user.signingkey $KeyID
+    commit.gpgsign true
+}
+
 #
 # Aliases
 #
