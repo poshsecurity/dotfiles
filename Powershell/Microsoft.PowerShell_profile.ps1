@@ -110,8 +110,8 @@ Function Set-GitSigning {
         [String]
         $KeyID
     )
-    user.signingkey $KeyID
-    commit.gpgsign true
+    git config user.signingkey $KeyID
+    git config commit.gpgsign true
 }
 
 #
